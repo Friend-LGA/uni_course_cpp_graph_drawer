@@ -3,11 +3,20 @@ import { Graph, Vertex, Edge } from "./graph";
 const kVertexDiameter = 48;
 const kDistanceBetweenVerticesH = kVertexDiameter * 2;
 const kDistanceBetweenVerticesV = kVertexDiameter;
+const kBgColor = '#1e1e1e';
 const kVertexFillColor = 'rgb(205, 205, 205)';
-const kVertexStrokeColor = '#1e1e1e';
+const kVertexStrokeColor = kBgColor;
 const kVertexStrokeWidth = 4;
+const kVertexTextFillColor = 'black';
 const kEdgeStrokeColor = 'rgb(205, 205, 205)';
 const kEdgeStrokeWidth = 2;
+const kEdgeTextBgColor = kBgColor;
+const kEdgeTextFillColor = 'white'
+const kEdgeTextBorder = 4;
+const kFontSize = 16;
+const kFont = `bold ${kFontSize}px Helvetica`;
+const kTextAlign = 'center';
+const kTextBaseline = 'middle';
 
 class Position {
   readonly x: number;
@@ -56,6 +65,12 @@ class VertexShape {
     ctx.stroke();
 
     ctx.closePath();
+
+    ctx.font = kFont;
+    ctx.textAlign = kTextAlign;
+    ctx.textBaseline = kTextBaseline;
+    ctx.fillStyle = kVertexTextFillColor;
+    ctx.fillText(this.vertexId.toString(), this.position.x, this.position.y);
   }
 };
 
@@ -81,6 +96,37 @@ class EdgeShape {
     ctx.stroke();
 
     ctx.closePath();
+
+    ctx.font = kFont;
+    ctx.textAlign = kTextAlign;
+    ctx.textBaseline = kTextBaseline;
+
+    const text = ctx.measureText(this.edgeId.toString());
+    const textSize = new Size(text.width + kEdgeTextBorder * 2, kFontSize + kEdgeTextBorder * 2);
+
+    const middlePosition = this.getMiddlePosition();
+    const textPosition = new Position(
+      middlePosition.x - textSize.width / 2,
+      middlePosition.y - textSize.height / 2
+    );
+
+    ctx.fillStyle = kEdgeTextBgColor;
+    ctx.fillRect(
+      textPosition.x,
+      textPosition.y,
+      textSize.width,
+      textSize.height
+    );
+
+    ctx.fillStyle = kEdgeTextFillColor;
+    ctx.fillText(this.edgeId.toString(), middlePosition.x, middlePosition.y);
+  }
+
+  private getMiddlePosition() {
+    return new Position(
+      (this.startPosition.x + this.endPosition.x) / 2,
+      (this.startPosition.y + this.endPosition.y) / 2
+    );
   }
 }
 
