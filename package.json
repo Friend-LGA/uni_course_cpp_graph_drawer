@@ -1,0 +1,30 @@
+{
+  "name": "graph_drawer",
+  "version": "1.0.0",
+  "description": "We are going to draw graphs, exciting!",
+  "main": "main.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "start": "npm run build && electron ./dist/main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Friend-LGA/uni_course_cpp_graph_drawer.git"
+  },
+  "keywords": [
+    "graph",
+    "draw"
+  ],
+  "author": "Grigorii Lutkov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Friend-LGA/uni_course_cpp_graph_drawer/issues"
+  },
+  "homepage": "https://github.com/Friend-LGA/uni_course_cpp_graph_drawer#readme",
+  "devDependencies": {
+    "@material/button": "^12.0.0",
+    "electron": "^14.0.0",
+    "typescript": "^4.4.2"
+  }
+}

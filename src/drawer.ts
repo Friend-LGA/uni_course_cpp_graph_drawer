@@ -1,0 +1,202 @@
+import { Graph, Vertex, Edge } from "./graph";
+
+const kVertexDiameter = 48;
+const kDistanceBetweenVerticesH = kVertexDiameter * 2;
+const kDistanceBetweenVerticesV = kVertexDiameter;
+const kVertexFillColor = 'rgb(205, 205, 205)';
+const kVertexStrokeColor = '#1e1e1e';
+const kVertexStrokeWidth = 4;
+const kEdgeStrokeColor = 'rgb(205, 205, 205)';
+const kEdgeStrokeWidth = 2;
+
+class Position {
+  readonly x: number;
+  readonly y: number;
+
+  constructor(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
+};
+
+class Size {
+  readonly width: number;
+  readonly height: number;
+
+  constructor(width: number, height: number) {
+    this.width = width;
+    this.height = height;
+  }
+};
+
+class VertexShape {
+  readonly vertexId: number;
+  readonly position: Position;
+
+  constructor(vertexId: number, position: Position) {
+    this.vertexId = vertexId;
+    this.position = position;
+  }
+
+  draw(ctx: CanvasRenderingContext2D) {
+    ctx.beginPath();
+
+    ctx.arc(
+      this.position.x,
+      this.position.y,
+      kVertexDiameter / 2,
+      0,
+      2 * Math.PI
+    );
+
+    ctx.lineWidth = kVertexStrokeWidth;
+    ctx.strokeStyle = kVertexStrokeColor;
+    ctx.fillStyle = kVertexFillColor;
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.closePath();
+  }
+};
+
+class EdgeShape {
+  readonly edgeId: number;
+  readonly startPosition: Position;
+  readonly endPosition: Position;
+
+  constructor(edgeId: number, startPosition: Position, endPosition: Position) {
+    this.edgeId = edgeId;
+    this.startPosition = startPosition;
+    this.endPosition = endPosition;
+  }
+
+  draw(ctx: CanvasRenderingContext2D) {
+    ctx.beginPath();
+
+    ctx.moveTo(this.startPosition.x, this.startPosition.y);
+    ctx.lineTo(this.endPosition.x, this.endPosition.y);
+
+    ctx.lineWidth = kEdgeStrokeWidth;
+    ctx.strokeStyle = kEdgeStrokeColor;
+    ctx.stroke();
+
+    ctx.closePath();
+  }
+}
+
+export class Drawer {
+  readonly canvas: HTMLCanvasElement;
+  readonly graph: Graph;
+
+  private canvasSize: Size;
+  private vertexShapes: Array<VertexShape> = [];
+  private edgeShapes: Array<EdgeShape> = [];
+
+  constructor(canvas: HTMLCanvasElement, vertices: Array<Vertex>, edges: Array<Edge>) {
+    this.canvas = canvas;
+    this.graph = new Graph(vertices, edges);
+
+    const verticesColumns = this.getVerticesColumns([this.graph.vertices[0]]);
+    const longestColumnLength = this.findLongestColumnLength(verticesColumns);
+
+    this.canvasSize = this.calculateCanvasSize(verticesColumns, longestColumnLength);
+    this.vertexShapes = this.generateVertexShapes(verticesColumns);
+    this.edgeShapes = this.generateEdgeShapes();
+  }
+
+  draw() {
+    this.canvas.width = this.canvasSize.width;
+    this.canvas.height = this.canvasSize.height;
+
+    const ctx = this.canvas.getContext('2d');
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+    this.edgeShapes.forEach((edgeShape) => {
+      edgeShape.draw(ctx);
+    });
+
+    this.vertexShapes.forEach((vertexShape) => {
+      vertexShape.draw(ctx);
+    });
+  }
+
+  private getVerticesColumns(currentColumn: Array<Vertex>, visitedVertices: Array<Vertex> = []): Array<Array<Vertex>> {
+    if (currentColumn.length == 0) {
+      return;
+    }
+
+    const nextColumn: Array<Vertex> = [];
+
+    currentColumn.forEach((vertex) => {
+      visitedVertices.push(vertex);
+      const neighbours = this.graph.getNeighbours(vertex);
+      const nextColumnNeightbours = neighbours.filter((neighbour) => {
+        return !visitedVertices.includes(neighbour) && !nextColumn.includes(neighbour);
+      });
+      nextColumn.push(...nextColumnNeightbours);
+    });
+
+    const result = [currentColumn];
+    const nextColumns = this.getVerticesColumns(nextColumn, visitedVertices);
+    result.push(...nextColumns);
+    return result;
+  }
+
+  private findLongestColumnLength(verticesColumns: Array<Array<Vertex>>): number {
+    let result = 0;
+    verticesColumns.forEach((column) => {
+      if (column.length > result) {
+        result = column.length;
+      }
+    });
+    return result;
+  }
+
+  private calculateCanvasSize(verticesColumns: Array<Array<Vertex>>, longestColumnLength: number) {
+    const columnsCount = verticesColumns.length;
+    return new Size(
+      (kVertexDiameter * columnsCount) + (kDistanceBetweenVerticesH * (columnsCount - 1)),
+      this.calculateColumnHeight(longestColumnLength),
+    );
+  }
+
+  private calculateColumnHeight(columnLength: number): number {
+    return (kVertexDiameter * columnLength) + (kDistanceBetweenVerticesV * (columnLength - 1))
+  }
+
+  private generateVertexShapes(verticesColumns: Array<Array<Vertex>>): Array<VertexShape> {
+    const result: Array<VertexShape> = []
+    verticesColumns.forEach((column, columnIndex) => {
+      const shiftY = (this.canvasSize.height - this.calculateColumnHeight(column.length)) / 2;
+      column.forEach((vertex, vertexIndex) => {
+        result.push(
+          new VertexShape(
+            vertex.id,
+            new Position(
+              kVertexDiameter / 2 + columnIndex * (kVertexDiameter + kDistanceBetweenVerticesH),
+              shiftY + kVertexDiameter / 2 + vertexIndex * (kVertexDiameter + kDistanceBetweenVerticesV)
+            )
+          )
+        )
+      });
+    });
+    return result;
+  }
+
+  private generateEdgeShapes(): Array<EdgeShape> {
+    return this.graph.edges.map((edge) => {
+      return new EdgeShape(
+        edge.id,
+        this.getVertexShapePosition(edge.vertex_ids[0]),
+        this.getVertexShapePosition(edge.vertex_ids[1])
+      )
+    });
+  }
+
+  private getVertexShapePosition(vertexId: number): Position {
+    const vertexShape = this.vertexShapes.find((vertexShape) => {
+      return vertexShape.vertexId == vertexId;
+    });
+    return vertexShape.position;
+  }
+};
