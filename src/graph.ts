@@ -10,7 +10,9 @@ export class Graph {
   getEdges(vertex: Vertex): Array<Edge> {
     let result: Array<Edge> = [];
     vertex.edge_ids.forEach((id) => {
-      result.push(this.edges[id]);
+      result.push(this.edges.find((edge) => {
+        return edge.id == id;
+      }));
     });
     return result;
   }
@@ -18,7 +20,9 @@ export class Graph {
   getVertices(edge: Edge): Array<Vertex> {
     let result: Array<Vertex> = [];
     edge.vertex_ids.forEach((id) => {
-      result.push(this.vertices[id]);
+      result.push(this.vertices.find((vertex) => {
+        return vertex.id == id;
+      }));
     });
     return result;
   }

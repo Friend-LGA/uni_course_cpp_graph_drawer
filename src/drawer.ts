@@ -135,14 +135,14 @@ export class Drawer {
   readonly graph: Graph;
 
   private canvasSize: Size;
-  private vertexShapes: Array<VertexShape> = [];
-  private edgeShapes: Array<EdgeShape> = [];
+  private vertexShapes: Array<VertexShape>;
+  private edgeShapes: Array<EdgeShape>;
 
   constructor(canvas: HTMLCanvasElement, vertices: Array<Vertex>, edges: Array<Edge>) {
     this.canvas = canvas;
     this.graph = new Graph(vertices, edges);
 
-    const verticesColumns = this.getVerticesColumns([this.graph.vertices[0]]);
+    const verticesColumns = this.getVerticesColumns(this.graph.vertices.length > 0 ? [this.graph.vertices[0]] : []);
     const longestColumnLength = this.findLongestColumnLength(verticesColumns);
 
     this.canvasSize = this.calculateCanvasSize(verticesColumns, longestColumnLength);
@@ -168,7 +168,7 @@ export class Drawer {
 
   private getVerticesColumns(currentColumn: Array<Vertex>, visitedVertices: Array<Vertex> = []): Array<Array<Vertex>> {
     if (currentColumn.length == 0) {
-      return;
+      return [];
     }
 
     const nextColumn: Array<Vertex> = [];
@@ -199,9 +199,9 @@ export class Drawer {
   }
 
   private calculateCanvasSize(verticesColumns: Array<Array<Vertex>>, longestColumnLength: number) {
-    const columnsCount = verticesColumns.length;
+    const columnsLength = verticesColumns.length;
     return new Size(
-      (kVertexDiameter * columnsCount) + (kDistanceBetweenVerticesH * (columnsCount - 1)),
+      (kVertexDiameter * columnsLength) + (kDistanceBetweenVerticesH * (columnsLength - 1)),
       this.calculateColumnHeight(longestColumnLength),
     );
   }
