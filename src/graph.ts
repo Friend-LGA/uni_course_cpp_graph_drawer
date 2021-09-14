@@ -44,9 +44,11 @@ export class Graph {
 export class Vertex {
   readonly id: number;
   readonly edge_ids: Array<number>;
+  readonly depth: number;
 };
 
 export class Edge {
   readonly id: number;
   readonly vertex_ids: Array<number>;
+  readonly color: string;
 };

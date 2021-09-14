@@ -142,11 +142,11 @@ export class Drawer {
     this.canvas = canvas;
     this.graph = new Graph(vertices, edges);
 
-    const verticesColumns = this.getVerticesColumns(this.graph.vertices.length > 0 ? [this.graph.vertices[0]] : []);
-    const longestColumnLength = this.findLongestColumnLength(verticesColumns);
+    const verticesDepths = this.getVerticesDepths(this.graph.vertices.length > 0 ? [this.graph.vertices[0]] : []);
+    const longestDepthLength = this.findLongestDepthLength(verticesDepths);
 
-    this.canvasSize = this.calculateCanvasSize(verticesColumns, longestColumnLength);
-    this.vertexShapes = this.generateVertexShapes(verticesColumns);
+    this.canvasSize = this.calculateCanvasSize(verticesDepths, longestDepthLength);
+    this.vertexShapes = this.generateVertexShapes(verticesDepths);
     this.edgeShapes = this.generateEdgeShapes();
   }
 
@@ -166,60 +166,60 @@ export class Drawer {
     });
   }
 
-  private getVerticesColumns(currentColumn: Array<Vertex>, visitedVertices: Array<Vertex> = []): Array<Array<Vertex>> {
-    if (currentColumn.length == 0) {
+  private getVerticesDepths(currentDepth: Array<Vertex>, visitedVertices: Array<Vertex> = []): Array<Array<Vertex>> {
+    if (currentDepth.length == 0) {
       return [];
     }
 
-    const nextColumn: Array<Vertex> = [];
+    const nextDepth: Array<Vertex> = [];
 
-    currentColumn.forEach((vertex) => {
+    currentDepth.forEach((vertex) => {
       visitedVertices.push(vertex);
       const neighbours = this.graph.getNeighbours(vertex);
-      const nextColumnNeightbours = neighbours.filter((neighbour) => {
-        return !visitedVertices.includes(neighbour) && !nextColumn.includes(neighbour);
+      const nextDepthNeightbours = neighbours.filter((neighbour) => {
+        return !visitedVertices.includes(neighbour) && !nextDepth.includes(neighbour);
       });
-      nextColumn.push(...nextColumnNeightbours);
+      nextDepth.push(...nextDepthNeightbours);
     });
 
-    const result = [currentColumn];
-    const nextColumns = this.getVerticesColumns(nextColumn, visitedVertices);
-    result.push(...nextColumns);
+    const result = [currentDepth];
+    const nextDepths = this.getVerticesDepths(nextDepth, visitedVertices);
+    result.push(...nextDepths);
     return result;
   }
 
-  private findLongestColumnLength(verticesColumns: Array<Array<Vertex>>): number {
+  private findLongestDepthLength(verticesDepths: Array<Array<Vertex>>): number {
     let result = 0;
-    verticesColumns.forEach((column) => {
-      if (column.length > result) {
-        result = column.length;
+    verticesDepths.forEach((depth) => {
+      if (depth.length > result) {
+        result = depth.length;
       }
     });
     return result;
   }
 
-  private calculateCanvasSize(verticesColumns: Array<Array<Vertex>>, longestColumnLength: number) {
-    const columnsLength = verticesColumns.length;
+  private calculateCanvasSize(verticesDepths: Array<Array<Vertex>>, longestDepthLength: number) {
+    const depthsLength = verticesDepths.length;
     return new Size(
-      (kVertexDiameter * columnsLength) + (kDistanceBetweenVerticesH * (columnsLength - 1)),
-      this.calculateColumnHeight(longestColumnLength),
+      (kVertexDiameter * depthsLength) + (kDistanceBetweenVerticesH * (depthsLength - 1)),
+      this.calculateDepthHeight(longestDepthLength),
     );
   }
 
-  private calculateColumnHeight(columnLength: number): number {
-    return (kVertexDiameter * columnLength) + (kDistanceBetweenVerticesV * (columnLength - 1))
+  private calculateDepthHeight(depthLength: number): number {
+    return (kVertexDiameter * depthLength) + (kDistanceBetweenVerticesV * (depthLength - 1))
   }
 
-  private generateVertexShapes(verticesColumns: Array<Array<Vertex>>): Array<VertexShape> {
+  private generateVertexShapes(verticesDepths: Array<Array<Vertex>>): Array<VertexShape> {
     const result: Array<VertexShape> = []
-    verticesColumns.forEach((column, columnIndex) => {
-      const shiftY = (this.canvasSize.height - this.calculateColumnHeight(column.length)) / 2;
-      column.forEach((vertex, vertexIndex) => {
+    verticesDepths.forEach((depth, depthIndex) => {
+      const shiftY = (this.canvasSize.height - this.calculateDepthHeight(depth.length)) / 2;
+      depth.forEach((vertex, vertexIndex) => {
         result.push(
           new VertexShape(
             vertex.id,
             new Position(
-              kVertexDiameter / 2 + columnIndex * (kVertexDiameter + kDistanceBetweenVerticesH),
+              kVertexDiameter / 2 + depthIndex * (kVertexDiameter + kDistanceBetweenVerticesH),
               shiftY + kVertexDiameter / 2 + vertexIndex * (kVertexDiameter + kDistanceBetweenVerticesV)
             )
           )
