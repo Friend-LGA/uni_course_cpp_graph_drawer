@@ -1,6 +1,6 @@
 import { ipcRenderer } from 'electron';
 import { Drawer } from './drawer';
-import { Graph, Vertex, Edge } from './graph';
+import { Graph, Vertex, Edge, EdgeColor } from './graph';
 
 document.addEventListener('mouseout', (event) => {
   const target = event.target as HTMLTextAreaElement;
@@ -17,22 +17,45 @@ window.onload = () => {
   });
 }
 
+function createVerticesCanvas(): HTMLCanvasElement {
+  let element = document.createElement('canvas');
+  element.id = `canvas-vertices`;
+  return element;
+}
+
+function createEdgesCanvas(color: EdgeColor): HTMLCanvasElement {
+  let element = document.createElement('canvas');
+  element.id = `canvas-edges-${color}`;
+  return element;
+}
+
 ipcRenderer.on('create-or-replace-canvas', (event, graph) => {
   const openFileButton = document.getElementById('open-file');
   if (openFileButton) {
     openFileButton.remove();
   }
 
-  const canvas = ((): HTMLCanvasElement => {
-    let element = document.getElementById('graph-canvas');
+  const canvases = ((): HTMLDivElement => {
+    let element = document.getElementById('canvases');
     if (!element) {
-      element = document.createElement('canvas')
-      element.id = 'graph-canvas';
+      element = document.createElement('div')
+      element.id = 'canvases';
       document.body.appendChild(element);
     }
-    return element as HTMLCanvasElement;
+    element.innerHTML = '';
+    return element as HTMLDivElement;
   })();
 
-  const drawer = new Drawer(canvas, graph.vertices, graph.edges);
+  const verticesCanvas = createVerticesCanvas();
+  canvases.appendChild(verticesCanvas);
+
+  let edgesCanvases = new Map<EdgeColor, HTMLCanvasElement>();
+  Object.values(EdgeColor).forEach((color) => {
+    const edgesCanvas = createEdgesCanvas(color);
+    canvases.appendChild(edgesCanvas);
+    edgesCanvases.set(color, edgesCanvas);
+  });
+
+  const drawer = new Drawer(canvases, verticesCanvas, edgesCanvases, graph.vertices, graph.edges);
   drawer.draw();
 });

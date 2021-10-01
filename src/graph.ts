@@ -1,3 +1,31 @@
+export enum EdgeColor {
+  Gray = "gray",
+  Green = "green",
+  Blue = "blue",
+  Yellow = "yellow",
+  Red = "red"
+};
+
+export class Vertex {
+  readonly id: number;
+  readonly edge_ids: Array<number>;
+  readonly depth: number = -1;
+
+  constructor(data?: Partial<Vertex>) {
+    Object.assign(this, data);
+  }
+};
+
+export class Edge {
+  readonly id: number;
+  readonly vertex_ids: Array<number>;
+  readonly color: EdgeColor = EdgeColor.Gray;
+
+  constructor(data?: Partial<Edge>) {
+    Object.assign(this, data);
+  }
+};
+
 export class Graph {
   readonly vertices: Array<Vertex>;
   readonly edges: Array<Edge>;
@@ -7,12 +35,15 @@ export class Graph {
     this.edges = edges;
   }
 
-  getEdges(vertex: Vertex): Array<Edge> {
+  getEdges(vertex: Vertex, color?: EdgeColor): Array<Edge> {
     let result: Array<Edge> = [];
     vertex.edge_ids.forEach((id) => {
-      result.push(this.edges.find((edge) => {
-        return edge.id == id;
-      }));
+      const edge = this.edges.find((edge) => {
+        return edge.id == id && (color == undefined || edge.color == color);
+      });
+      if (edge) {
+        result.push(edge);
+      }
     });
     return result;
   }
@@ -27,9 +58,9 @@ export class Graph {
     return result;
   }
 
-  getNeighbours(vertex: Vertex): Array<Vertex> {
+  getNeighbours(vertex: Vertex, color?: EdgeColor): Array<Vertex> {
     let result: Array<Vertex> = [];
-    const edges = this.getEdges(vertex);
+    const edges = this.getEdges(vertex, color);
     edges.forEach((edge) => {
       const vertices = this.getVertices(edge);
       const filtered = vertices.filter((element) => {
@@ -39,16 +70,4 @@ export class Graph {
     });
     return result;
   }
-};
-
-export class Vertex {
-  readonly id: number;
-  readonly edge_ids: Array<number>;
-  readonly depth: number;
-};
-
-export class Edge {
-  readonly id: number;
-  readonly vertex_ids: Array<number>;
-  readonly color: string;
 };

@@ -36,7 +36,12 @@ function createMenu() {
 
   const viewMenu = new MenuItem({
     role: 'viewMenu',
-    submenu: [{ role: 'toggleDevTools' }]
+    submenu: [
+      { role: 'toggleDevTools' },
+      { role: 'zoomIn' },
+      { role: 'zoomOut' },
+      { role: 'resetZoom' }
+    ]
   });
 
   const windowMenu = new MenuItem({ role: 'windowMenu' });
