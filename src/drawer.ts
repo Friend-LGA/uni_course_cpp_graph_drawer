@@ -10,7 +10,7 @@ const kColorRed = '#FF3333';
 const kCanvasPadding = 16;
 const kVertexDiameter = 48;
 const kGreenEdgeDiameter = kVertexDiameter * 1.5;
-const kDistanceBetweenVerticesH = kVertexDiameter * 2 * 2;
+const kDistanceBetweenVerticesH = kVertexDiameter * 4;
 const kDistanceBetweenVerticesV = kVertexDiameter * 2;
 const kVertexStrokeWidth = 4;
 const kEdgeStrokeWidth = 4;
@@ -296,14 +296,15 @@ export class Drawer {
   private generateVertexShapes(verticesDepths: Array<Array<Vertex>>): Array<VertexShape> {
     const result: Array<VertexShape> = []
     verticesDepths.forEach((depth, depthIndex) => {
-      const shiftY = this.canvasSize.height / (depth.length + 1);
+      const offset = (this.distanceBetweenVerticesV + (kVertexDiameter / 2)); // needs to fill full height, try to change to 0 to see difference
+      const shiftY = (this.canvasSize.height + (offset * 2) - (kCanvasPadding * 2)) / (depth.length + 1);
       depth.forEach((vertex, vertexIndex) => {
         result.push(
           new VertexShape(
             vertex,
             new Position(
               kVertexDiameter / 2 + depthIndex * (kVertexDiameter + this.distanceBetweenVerticesH) + kCanvasPadding,
-              shiftY * (vertexIndex + 1) + kCanvasPadding
+              shiftY * (vertexIndex + 1) - offset + kCanvasPadding
             )
           )
         )
