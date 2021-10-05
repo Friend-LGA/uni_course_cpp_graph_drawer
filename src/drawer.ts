@@ -1,22 +1,39 @@
 import { Graph, Vertex, Edge, EdgeColor } from "./graph";
 
+const kColorBg = '#1E1E1E';
+const kColorGray = '#CDCDCD';
+const kColorGreen = '#00FF00';
+const kColorBlue = '#6666FF';
+const kColorYellow = '#FFFF33';
+const kColorRed = '#FF3333';
+
+const kCanvasPadding = 16;
 const kVertexDiameter = 48;
+const kGreenEdgeDiameter = kVertexDiameter * 1.5;
 const kDistanceBetweenVerticesH = kVertexDiameter * 2 * 2;
 const kDistanceBetweenVerticesV = kVertexDiameter * 2;
-const kBgColor = '#1e1e1e';
-const kVertexFillColor = 'rgb(205, 205, 205)';
-const kVertexStrokeColor = kBgColor;
 const kVertexStrokeWidth = 4;
-const kVertexTextFillColor = 'black';
-const kEdgeStrokeColor = 'rgb(205, 205, 205)';
 const kEdgeStrokeWidth = 4;
-const kEdgeTextBgColor = kBgColor;
-const kEdgeTextFillColor = 'white'
 const kEdgeTextBorder = 4;
 const kFontSize = 16;
 const kFont = `bold ${kFontSize}px Helvetica`;
 const kTextAlign = 'center';
 const kTextBaseline = 'middle';
+
+function getColorString(color: EdgeColor): string {
+  switch (color) {
+    case EdgeColor.Gray:
+      return kColorGray;
+    case EdgeColor.Green:
+      return kColorGreen;
+    case EdgeColor.Blue:
+      return kColorBlue;
+    case EdgeColor.Yellow:
+      return kColorYellow;
+    case EdgeColor.Red:
+      return kColorRed;
+  }
+}
 
 class Position {
   readonly x: number;
@@ -59,8 +76,8 @@ class VertexShape {
     );
 
     ctx.lineWidth = kVertexStrokeWidth;
-    ctx.strokeStyle = kVertexStrokeColor;
-    ctx.fillStyle = kVertexFillColor;
+    ctx.strokeStyle = kColorBg;
+    ctx.fillStyle = kColorGray;
     ctx.fill();
     ctx.stroke();
 
@@ -69,7 +86,7 @@ class VertexShape {
     ctx.font = kFont;
     ctx.textAlign = kTextAlign;
     ctx.textBaseline = kTextBaseline;
-    ctx.fillStyle = kVertexTextFillColor;
+    ctx.fillStyle = kColorBg;
     ctx.fillText(this.vertex.id.toString(), this.position.x, this.position.y);
   }
 };
@@ -78,21 +95,34 @@ class EdgeShape {
   readonly edge: Edge;
   readonly startPosition: Position;
   readonly endPosition: Position;
+  readonly color: string;
 
   constructor(edge: Edge, startPosition: Position, endPosition: Position) {
     this.edge = edge;
     this.startPosition = startPosition;
     this.endPosition = endPosition;
+    this.color = getColorString(edge.color);
   }
 
   draw(ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
 
-    ctx.moveTo(this.startPosition.x, this.startPosition.y);
-    ctx.lineTo(this.endPosition.x, this.endPosition.y);
+    if (this.edge.color == EdgeColor.Green) {
+      ctx.arc(
+        this.startPosition.x, // center x
+        this.startPosition.y - kGreenEdgeDiameter / 2, // center y
+        kGreenEdgeDiameter / 2, // radius
+        0, // start angle
+        (Math.PI / 180) * 360 // end angle
+      );
+    }
+    else {
+      ctx.moveTo(this.startPosition.x, this.startPosition.y);
+      ctx.lineTo(this.endPosition.x, this.endPosition.y);
+    }
 
     ctx.lineWidth = kEdgeStrokeWidth;
-    ctx.strokeStyle = kEdgeStrokeColor;
+    ctx.strokeStyle = this.color;
     ctx.stroke();
 
     ctx.closePath();
@@ -104,13 +134,13 @@ class EdgeShape {
     const text = ctx.measureText(this.edge.id.toString());
     const textSize = new Size(text.width + kEdgeTextBorder * 2, kFontSize + kEdgeTextBorder * 2);
 
-    const middlePosition = this.getMiddlePosition();
+    const textMiddlePosition = this.getTextMiddlePosition();
     const textPosition = new Position(
-      middlePosition.x - textSize.width / 2,
-      middlePosition.y - textSize.height / 2
+      textMiddlePosition.x - textSize.width / 2,
+      textMiddlePosition.y - textSize.height / 2
     );
 
-    ctx.fillStyle = kEdgeTextBgColor;
+    ctx.fillStyle = kColorBg;
     ctx.fillRect(
       textPosition.x,
       textPosition.y,
@@ -118,15 +148,23 @@ class EdgeShape {
       textSize.height
     );
 
-    ctx.fillStyle = kEdgeTextFillColor;
-    ctx.fillText(this.edge.id.toString(), middlePosition.x, middlePosition.y);
+    ctx.fillStyle = this.color;
+    ctx.fillText(this.edge.id.toString(), textMiddlePosition.x, textMiddlePosition.y);
   }
 
-  private getMiddlePosition() {
-    return new Position(
-      (this.startPosition.x + this.endPosition.x) / 2,
-      (this.startPosition.y + this.endPosition.y) / 2
-    );
+  private getTextMiddlePosition(): Position {
+    if (this.edge.color == EdgeColor.Green) {
+      return new Position(
+        this.startPosition.x,
+        this.startPosition.y - kGreenEdgeDiameter
+      );
+    }
+    else {
+      return new Position(
+        (this.startPosition.x + this.endPosition.x) / 2,
+        (this.startPosition.y + this.endPosition.y) / 2
+      );
+    }
   }
 }
 
@@ -138,7 +176,7 @@ export class Drawer {
 
   private canvasSize: Size;
   private vertexShapes: Array<VertexShape>;
-  private edgeShapes: Array<EdgeShape>;
+  private edgeShapes: Map<EdgeColor, Array<EdgeShape>>;
 
   private distanceBetweenVerticesH: number;
   private distanceBetweenVerticesV: number;
@@ -152,8 +190,8 @@ export class Drawer {
     const verticesDepths = this.getVerticesDepths(this.graph.vertices.length > 0 ? [this.graph.vertices[0]] : []);
     const longestDepthLength = this.findLongestDepthLength(verticesDepths);
 
-    this.distanceBetweenVerticesH = kDistanceBetweenVerticesH; // * Math.max(1.0, verticesDepths.length / 2.0);
-    this.distanceBetweenVerticesV = kDistanceBetweenVerticesV; // * Math.max(1.0, verticesDepths.length / 4.0);
+    this.distanceBetweenVerticesH = kDistanceBetweenVerticesH; // * Math.max(1, verticesDepths.length / 2);
+    this.distanceBetweenVerticesV = kDistanceBetweenVerticesV; // * Math.max(1, verticesDepths.length / 4);
 
     this.canvasSize = this.calculateCanvasSize(verticesDepths, longestDepthLength);
     this.vertexShapes = this.generateVertexShapes(verticesDepths);
@@ -175,29 +213,40 @@ export class Drawer {
   }
 
   draw() {
+    this.setSizes();
+
+    this.drawVertices();
+    this.drawEdges(EdgeColor.Gray);
+    this.drawEdges(EdgeColor.Green);
+    this.drawEdges(EdgeColor.Blue);
+    this.drawEdges(EdgeColor.Yellow);
+    this.drawEdges(EdgeColor.Red);
+  }
+
+  private setSizes() {
     this.setElementSize(this.canvasesContainer);
     this.setCanvasSize(this.verticesCanvas);
     this.edgesCanvases.forEach((value) => {
       this.setCanvasSize(value);
     });
+  }
 
-    {
-      const ctx = this.verticesCanvas.getContext('2d');
-      ctx.clearRect(0, 0, this.canvasSize.width, this.canvasSize.height);
+  private drawVertices() {
+    const ctx = this.verticesCanvas.getContext('2d');
+    ctx.clearRect(0, 0, this.canvasSize.width, this.canvasSize.height);
 
-      this.edgeShapes.forEach((edgeShape) => {
-        edgeShape.draw(ctx);
-      });
-    }
+    this.vertexShapes.forEach((vertexShape) => {
+      vertexShape.draw(ctx);
+    });
+  }
 
-    {
-      const ctx = this.getEdgeCanvas(EdgeColor.Gray).getContext('2d');
-      ctx.clearRect(0, 0, this.canvasSize.width, this.canvasSize.height);
+  private drawEdges(color: EdgeColor) {
+    const ctx = this.getEdgeCanvas(color).getContext('2d');
+    ctx.clearRect(0, 0, this.canvasSize.width, this.canvasSize.height);
 
-      this.vertexShapes.forEach((vertexShape) => {
-        vertexShape.draw(ctx);
-      });
-    }
+    this.edgeShapes.get(color).forEach((edgeShape) => {
+      edgeShape.draw(ctx);
+    });
   }
 
   private getVerticesDepths(currentDepth: Array<Vertex>, visitedVertices: Array<Vertex> = []): Array<Array<Vertex>> {
@@ -235,8 +284,8 @@ export class Drawer {
   private calculateCanvasSize(verticesDepths: Array<Array<Vertex>>, longestDepthLength: number) {
     const depthsLength = verticesDepths.length;
     return new Size(
-      (kVertexDiameter * depthsLength) + (this.distanceBetweenVerticesH * (depthsLength - 1)),
-      this.calculateDepthHeight(longestDepthLength),
+      (kVertexDiameter * depthsLength) + (this.distanceBetweenVerticesH * (depthsLength - 1)) + kCanvasPadding * 2,
+      this.calculateDepthHeight(longestDepthLength) + kCanvasPadding * 2,
     );
   }
 
@@ -253,8 +302,8 @@ export class Drawer {
           new VertexShape(
             vertex,
             new Position(
-              kVertexDiameter / 2 + depthIndex * (kVertexDiameter + this.distanceBetweenVerticesH),
-              shiftY * (vertexIndex + 1)
+              kVertexDiameter / 2 + depthIndex * (kVertexDiameter + this.distanceBetweenVerticesH) + kCanvasPadding,
+              shiftY * (vertexIndex + 1) + kCanvasPadding
             )
           )
         )
@@ -263,14 +312,23 @@ export class Drawer {
     return result;
   }
 
-  private generateEdgeShapes(): Array<EdgeShape> {
-    return this.graph.edges.map((edge) => {
-      return new EdgeShape(
+  private generateEdgeShapes(): Map<EdgeColor, Array<EdgeShape>> {
+    let result = new Map<EdgeColor, Array<EdgeShape>>();
+
+    Object.values(EdgeColor).forEach((color) => {
+      result.set(color, []);
+    });
+
+    this.graph.edges.forEach((edge) => {
+      let array = result.get(edge.color);
+      array.push(new EdgeShape(
         edge,
         this.getVertexShapePosition(edge.vertex_ids[0]),
         this.getVertexShapePosition(edge.vertex_ids[1])
-      )
+      ))
     });
+
+    return result;
   }
 
   private getVertexShapePosition(vertexId: number): Position {

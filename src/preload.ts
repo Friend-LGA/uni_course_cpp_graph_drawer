@@ -46,15 +46,15 @@ ipcRenderer.on('create-or-replace-canvas', (event, graph) => {
     return element as HTMLDivElement;
   })();
 
-  const verticesCanvas = createVerticesCanvas();
-  canvases.appendChild(verticesCanvas);
-
   let edgesCanvases = new Map<EdgeColor, HTMLCanvasElement>();
-  Object.values(EdgeColor).forEach((color) => {
+  [EdgeColor.Gray, EdgeColor.Green, EdgeColor.Blue, EdgeColor.Yellow, EdgeColor.Red].forEach((color) => {
     const edgesCanvas = createEdgesCanvas(color);
     canvases.appendChild(edgesCanvas);
     edgesCanvases.set(color, edgesCanvas);
   });
+
+  const verticesCanvas = createVerticesCanvas();
+  canvases.appendChild(verticesCanvas);
 
   const drawer = new Drawer(canvases, verticesCanvas, edgesCanvases, graph.vertices, graph.edges);
   drawer.draw();
