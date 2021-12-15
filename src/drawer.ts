@@ -1,20 +1,20 @@
 import { Graph, Vertex, Edge, EdgeColor } from "./graph";
 
 const kColorBg = '#1E1E1E';
-const kColorGray = '#CDCDCD';
+const kColorGrey = '#CDCDCD';
 const kColorGreen = '#00FF00';
 const kColorBlue = '#6666FF';
 const kColorYellow = '#FFFF33';
 const kColorRed = '#FF3333';
 
-const kCanvasPadding = 16;
-const kVertexDiameter = 48;
+const kCanvasPadding = 48; // needs to be bigger than green edge
+const kVertexDiameter = 32;
 const kGreenEdgeDiameter = kVertexDiameter * 1.5;
 const kDistanceBetweenVerticesH = kVertexDiameter * 4;
 const kDistanceBetweenVerticesV = kVertexDiameter * 2;
-const kVertexStrokeWidth = 4;
-const kEdgeStrokeWidth = 4;
-const kEdgeTextBorder = 4;
+const kVertexStrokeWidth = 2;
+const kEdgeStrokeWidth = 2;
+const kEdgeTextBorder = 2;
 const kFontSize = 16;
 const kFont = `bold ${kFontSize}px Helvetica`;
 const kTextAlign = 'center';
@@ -22,8 +22,8 @@ const kTextBaseline = 'middle';
 
 function getColorString(color: EdgeColor): string {
   switch (color) {
-    case EdgeColor.Gray:
-      return kColorGray;
+    case EdgeColor.Grey:
+      return kColorGrey;
     case EdgeColor.Green:
       return kColorGreen;
     case EdgeColor.Blue:
@@ -77,7 +77,7 @@ class VertexShape {
 
     ctx.lineWidth = kVertexStrokeWidth;
     ctx.strokeStyle = kColorBg;
-    ctx.fillStyle = kColorGray;
+    ctx.fillStyle = kColorGrey;
     ctx.fill();
     ctx.stroke();
 
@@ -216,7 +216,7 @@ export class Drawer {
     this.setSizes();
 
     this.drawVertices();
-    this.drawEdges(EdgeColor.Gray);
+    this.drawEdges(EdgeColor.Grey);
     this.drawEdges(EdgeColor.Green);
     this.drawEdges(EdgeColor.Blue);
     this.drawEdges(EdgeColor.Yellow);
@@ -258,7 +258,7 @@ export class Drawer {
 
     currentDepth.forEach((vertex) => {
       visitedVertices.push(vertex);
-      const neighbours = this.graph.getNeighbours(vertex, EdgeColor.Gray);
+      const neighbours = this.graph.getNeighbours(vertex, EdgeColor.Grey);
       const nextDepthNeightbours = neighbours.filter((neighbour) => {
         return !visitedVertices.includes(neighbour) && !nextDepth.includes(neighbour);
       });

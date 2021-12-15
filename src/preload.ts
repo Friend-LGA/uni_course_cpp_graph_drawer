@@ -47,7 +47,7 @@ ipcRenderer.on('create-or-replace-canvas', (event, graph) => {
   })();
 
   let edgesCanvases = new Map<EdgeColor, HTMLCanvasElement>();
-  [EdgeColor.Gray, EdgeColor.Green, EdgeColor.Blue, EdgeColor.Yellow, EdgeColor.Red].forEach((color) => {
+  [EdgeColor.Grey, EdgeColor.Green, EdgeColor.Blue, EdgeColor.Yellow, EdgeColor.Red].forEach((color) => {
     const edgesCanvas = createEdgesCanvas(color);
     canvases.appendChild(edgesCanvas);
     edgesCanvases.set(color, edgesCanvas);

@@ -1,5 +1,5 @@
 export enum EdgeColor {
-  Gray = "gray",
+  Grey = "grey",
   Green = "green",
   Blue = "blue",
   Yellow = "yellow",
@@ -19,7 +19,7 @@ export class Vertex {
 export class Edge {
   readonly id: number;
   readonly vertex_ids: Array<number>;
-  readonly color: EdgeColor = EdgeColor.Gray;
+  readonly color: EdgeColor = EdgeColor.Grey;
 
   constructor(data?: Partial<Edge>) {
     Object.assign(this, data);
