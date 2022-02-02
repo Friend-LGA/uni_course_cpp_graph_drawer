@@ -190,8 +190,8 @@ export class Drawer {
     const verticesDepths = this.getVerticesDepths(this.graph.vertices.length > 0 ? [this.graph.vertices[0]] : []);
     const longestDepthLength = this.findLongestDepthLength(verticesDepths);
 
-    this.distanceBetweenVerticesH = kDistanceBetweenVerticesH; // * Math.max(1, verticesDepths.length / 2);
-    this.distanceBetweenVerticesV = kDistanceBetweenVerticesV; // * Math.max(1, verticesDepths.length / 4);
+    this.distanceBetweenVerticesH = kDistanceBetweenVerticesH;
+    this.distanceBetweenVerticesV = kDistanceBetweenVerticesV;
 
     this.canvasSize = this.calculateCanvasSize(verticesDepths, longestDepthLength);
     this.vertexShapes = this.generateVertexShapes(verticesDepths);
